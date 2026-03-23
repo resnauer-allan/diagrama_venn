@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagramas de Venn — Pesquisa Acadêmica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0b0c10;
+    --surface:  #13151c;
+    --card:     #191c26;
+    --border:   rgba(255,255,255,0.07);
+    --accent1:  #7c6af7;
+    --accent2:  #40c9a2;
+    --accent3:  #f7a76c;
+    --text:     #e8e6f0;
+    --muted:    #7a7890;
+    --serif:    'DM Serif Display', Georgia, serif;
+    --sans:     'Outfit', sans-serif;
+    --mono:     'DM Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── noise overlay ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0; opacity: .5;
+  }
+
+  /* ── grid bg ── */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(124,106,247,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,106,247,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .page { position: relative; z-index: 1; }
+
+  /* ── hero ── */
+  .hero {
+    padding: 72px 40px 56px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--accent1);
+    border: 1px solid rgba(124,106,247,.25);
+    padding: 5px 12px; border-radius: 4px; margin-bottom: 24px;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent1);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+
+  .hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(36px, 5vw, 60px);
+    line-height: 1.1;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+  .hero h1 em { font-style: italic; color: var(--accent1); }
+
+  .hero-meta {
+    display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+    margin-top: 24px;
+  }
+  .meta-pill {
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+    border: 1px solid var(--border); padding: 6px 14px; border-radius: 3px;
+  }
+  .meta-pill span { color: var(--text); font-weight: 500; }
+
+  /* ── divider ── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent1) 30%, var(--accent2) 70%, transparent);
+    opacity: .25; margin: 0 40px;
+    max-width: 880px; margin-left: auto; margin-right: auto;
+  }
+
+  /* ── nav ── */
+  .nav-wrap {
+    max-width: 960px; margin: 0 auto;
+    padding: 32px 40px 0;
+  }
+  .nav-label {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 12px;
+  }
+  .nav {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .nav-btn {
+    font-family: var(--mono); font-size: 11px;
+    padding: 7px 14px; border-radius: 3px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .2s;
+    letter-spacing: .04em;
+  }
+  .nav-btn:hover { border-color: rgba(124,106,247,.4); color: var(--accent1); }
+  .nav-btn.on {
+    background: rgba(124,106,247,.12);
+    border-color: rgba(124,106,247,.5);
+    color: var(--accent1);
+  }
+
+  /* ── main card ── */
+  .main {
+    max-width: 960px; margin: 28px auto 80px;
+    padding: 0 40px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    animation: fadeUp .35s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(12px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  .card-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    padding: 28px 32px 20px; border-bottom: 1px solid var(--border);
+    gap: 16px; flex-wrap: wrap;
+  }
+  .card-title {
+    font-family: var(--serif); font-size: 26px; font-weight: 400;
+    color: var(--text); line-height: 1.2;
+  }
+  .card-num {
+    font-family: var(--mono); font-size: 11px; color: var(--muted);
+    border: 1px solid var(--border); padding: 4px 10px;
+    border-radius: 3px; white-space: nowrap; margin-top: 4px;
+  }
+
+  /* ── venn svg area ── */
+  .venn-area { padding: 32px; }
+
+  svg.venn { width: 100%; display: block; }
+
+  /* ── stats row ── */
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1px; background: var(--border);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .stat {
+    background: var(--card);
+    padding: 18px 20px; text-align: center;
+  }
+  .stat-n {
+    font-family: var(--serif); font-size: 32px; color: var(--text);
+    line-height: 1;
+  }
+  .stat-pct {
+    font-family: var(--mono); font-size: 11px; color: var(--muted);
+    margin-top: 2px;
+  }
+  .stat-l { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.3; }
+  .stat.highlight .stat-n { color: var(--accent1); }
+  .stat.highlight .stat-pct { color: rgba(124,106,247,.6); }
+
+  /* ── insight ── */
+  .insight {
+    padding: 20px 32px 24px;
+    display: flex; gap: 14px; align-items: flex-start;
+  }
+  .insight-icon {
+    font-family: var(--mono); font-size: 10px; color: var(--accent2);
+    border: 1px solid rgba(64,201,162,.25); padding: 4px 8px;
+    border-radius: 3px; margin-top: 2px; white-space: nowrap; flex-shrink: 0;
+  }
+  .insight p {
+    font-size: 13px; color: var(--muted); line-height: 1.65;
+  }
+  .insight strong { color: var(--text); font-weight: 500; }
+
+  /* ── panel hidden ── */
+  .panel { display: none; }
+  .panel.on { display: block; }
+
+  /* ── footer ── */
+  .footer {
+    text-align: center; padding: 32px;
+    font-family: var(--mono); font-size: 11px; color: var(--muted);
+    border-top: 1px solid var(--border); letter-spacing: .06em;
+  }
+
+  @media (max-width: 640px) {
+    .hero { padding: 48px 20px 36px; }
+    .main, .nav-wrap { padding-left: 20px; padding-right: 20px; }
+    .stats { grid-template-columns: repeat(2,1fr); }
+    .card-header, .venn-area, .insight { padding-left: 20px; padding-right: 20px; }
+    .hero h1 { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="hero">
+    <div class="hero-eyebrow">Trabalho Acadêmico</div>
+    <h1>Diagramas de <em>Venn</em><br>Pesquisa de Curiosidades</h1>
+    <div class="hero-meta">
+      <div class="meta-pill">Respondentes: <span>20</span></div>
+      <div class="meta-pill">Diagramas: <span>9</span></div>
+      <div class="meta-pill">Método: <span>Subgrupos cruzados</span></div>
+      <div class="meta-pill">Data: <span>Mar 2026</span></div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="nav-wrap">
+    <div class="nav-label">Selecionar diagrama</div>
+    <div class="nav" id="nav"></div>
+  </div>
+
+  <div class="main">
+    <div id="panels"></div>
+  </div>
+
+  <div class="footer">PESQUISA ACADÊMICA · OPÇÃO 2 · SUBGRUPOS CRUZADOS · N=20</div>
+</div>
+
+<script>
+const N = 20;
+
+const venns = [
+  {
+    title: 'Netflix × Musculação',
+    labelA: 'Usa Netflix', colorA: '#E24B4A', fillA: 'rgba(226,75,74,0.18)',
+    labelB: 'Pratica Musculação', colorB: '#40c9a2', fillB: 'rgba(64,201,162,0.18)',
+    onlyA: 7, onlyB: 2, both: 6, neither: 5,
+    note: '<strong>6 pessoas</strong> usam Netflix <strong>e</strong> praticam musculação — a maior interseção absoluta da pesquisa (30%). Todos os que praticam musculação sem Netflix são minoria (2 pessoas). 5 respondentes não se encaixam em nenhum dos dois grupos.',
+  },
+  {
+    title: 'Verão × Musculação',
+    labelA: 'Ama o Verão', colorA: '#f7a76c', fillA: 'rgba(247,167,108,0.18)',
+    labelB: 'Pratica Musculação', colorB: '#40c9a2', fillB: 'rgba(64,201,162,0.18)',
+    onlyA: 7, onlyB: 3, both: 5, neither: 5,
+    note: '<strong>5 pessoas</strong> combinam Verão e musculação. A estação favorita da maioria cruza naturalmente com o esporte mais praticado. 7 amam o Verão mas preferem outros esportes, e 3 malhão mesmo sem ser fãs do Verão.',
+  },
+  {
+    title: 'Netflix × Sertanejo',
+    labelA: 'Usa Netflix', colorA: '#E24B4A', fillA: 'rgba(226,75,74,0.18)',
+    labelB: 'Curte Sertanejo', colorB: '#f7a76c', fillB: 'rgba(247,167,108,0.18)',
+    onlyA: 8, onlyB: 0, both: 5, neither: 7,
+    note: '<strong>Achado importante:</strong> 100% dos fãs de Sertanejo usam Netflix — não existe nenhum fã de Sertanejo fora do círculo Netflix. Isso sugere forte associação entre as duas preferências nessa amostra.',
+  },
+  {
+    title: 'Verão × Comédia',
+    labelA: 'Ama o Verão', colorA: '#f7a76c', fillA: 'rgba(247,167,108,0.18)',
+    labelB: 'Gosta de Comédia', colorB: '#7c6af7', fillB: 'rgba(124,106,247,0.18)',
+    onlyA: 8, onlyB: 2, both: 4, neither: 6,
+    note: '<strong>4 pessoas</strong> combinam preferência por Verão e Comédia. 8 amam o Verão mas preferem outros gêneros. 2 gostam de Comédia mas não têm o Verão como estação favorita. 6 ficam fora dos dois grupos.',
+  },
+  {
+    title: 'Acredita na Lua × Noturno',
+    labelA: 'Acredita na Lua', colorA: '#7c6af7', fillA: 'rgba(124,106,247,0.18)',
+    labelB: 'Período Noturno', colorB: '#4db8ff', fillB: 'rgba(77,184,255,0.18)',
+    onlyA: 10, onlyB: 3, both: 6, neither: 1,
+    note: '<strong>6 noturnos</strong> acreditam que o homem pisou na Lua — mas 3 noturnos são céticos. Quase todos os respondentes acreditam (16/20), independente do período. Apenas <strong>1 pessoa</strong> não se encaixa em nenhum grupo (diurno cético).',
+  },
+  {
+    title: 'Rock × Drama',
+    labelA: 'Curte Rock', colorA: '#40c9a2', fillA: 'rgba(64,201,162,0.18)',
+    labelB: 'Gosta de Drama', colorB: '#E24B4A', fillB: 'rgba(226,75,74,0.18)',
+    onlyA: 2, onlyB: 0, both: 3, neither: 15,
+    note: '<strong>Achado importante:</strong> 100% dos fãs de Drama também curtem Rock — nenhum fã de Drama gosta de outro estilo musical. Forte correlação entre os dois. 15 respondentes ficam fora dos dois grupos, pois são minorias na amostra.',
+  },
+  {
+    title: 'Ação × Sertanejo',
+    labelA: 'Gosta de Ação', colorA: '#E24B4A', fillA: 'rgba(226,75,74,0.18)',
+    labelB: 'Curte Sertanejo', colorB: '#f7a76c', fillB: 'rgba(247,167,108,0.18)',
+    onlyA: 2, onlyB: 3, both: 2, neither: 13,
+    note: 'Interseção pequena: apenas <strong>2 pessoas</strong> combinam Ação e Sertanejo. Os dois grupos são relativamente pequenos na amostra, e a maioria (13 respondentes) prefere outras combinações de gênero de filme e estilo musical.',
+  },
+  {
+    title: 'Diurno × Musculação',
+    labelA: 'Período Diurno', colorA: '#4db8ff', fillA: 'rgba(77,184,255,0.18)',
+    labelB: 'Pratica Musculação', colorB: '#40c9a2', fillB: 'rgba(64,201,162,0.18)',
+    onlyA: 8, onlyB: 5, both: 3, neither: 4,
+    note: 'Musculação é <strong>mais popular entre noturnos</strong>: apenas 3 diurnos malhão, contra 5 noturnos que praticam (sem ser do período diurno). 8 diurnos preferem outros esportes. Possível indicativo de preferência de horário de treino noturno.',
+  },
+  {
+    title: 'Invisibilidade × Noturno',
+    labelA: 'Quer invisibilidade', colorA: '#7c6af7', fillA: 'rgba(124,106,247,0.18)',
+    labelB: 'Período Noturno', colorB: '#4db8ff', fillB: 'rgba(77,184,255,0.18)',
+    onlyA: 5, onlyB: 8, both: 1, neither: 6,
+    note: '<strong>Surpreendente:</strong> apenas 1 noturno quer invisibilidade, apesar de ser um superpoder intuitivamente "noturno". A maioria que escolheu invisibilidade é diurna (5 pessoas). 8 noturnos preferem outros superpoderes.',
+  },
+];
+
+function buildSVG(v) {
+  const W=700, H=300;
+  const cx1=200, cx2=500, cy=150, r=120;
+  const mid=(cx1+cx2)/2;
+  const {onlyA,onlyB,both,neither=0} = v;
+
+  // overlap ratio for visual
+  const totalA = onlyA+both, totalB = onlyB+both;
+  const overlapRatio = both / Math.max(totalA,totalB,1);
+
+  return `<svg class="venn" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="glow-a">
+        <feGaussianBlur stdDeviation="8" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <filter id="glow-b">
+        <feGaussianBlur stdDeviation="8" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+
+    <!-- Glow halos -->
+    <circle cx="${cx1}" cy="${cy}" r="${r+10}" fill="${v.colorA}" opacity="0.07"/>
+    <circle cx="${cx2}" cy="${cy}" r="${r+10}" fill="${v.colorB}" opacity="0.07"/>
+
+    <!-- Main circles -->
+    <circle cx="${cx1}" cy="${cy}" r="${r}" fill="${v.fillA}" stroke="${v.colorA}" stroke-width="1.5" opacity="0.9"/>
+    <circle cx="${cx2}" cy="${cy}" r="${r}" fill="${v.fillB}" stroke="${v.colorB}" stroke-width="1.5" opacity="0.9"/>
+
+    <!-- Left label -->
+    <text x="${cx1-58}" y="${cy-52}" text-anchor="middle" font-family="'Outfit',sans-serif" font-size="12" font-weight="500" fill="${v.colorA}" opacity="0.9">${v.labelA}</text>
+
+    <!-- Left count -->
+    <text x="${cx1-58}" y="${cy-14}" text-anchor="middle" font-family="'DM Serif Display',serif" font-size="38" fill="${v.colorA}">${onlyA}</text>
+    <text x="${cx1-58}" y="${cy+12}" text-anchor="middle" font-family="'DM Mono',monospace" font-size="11" fill="${v.colorA}" opacity="0.65">${Math.round(onlyA/N*100)}% · só este</text>
+
+    <!-- Intersection label -->
+    <text x="${mid}" y="${cy-28}" text-anchor="middle" font-family="'Outfit',sans-serif" font-size="11" fill="rgba(255,255,255,0.4)">interseção</text>
+    <text x="${mid}" y="${cy+10}" text-anchor="middle" font-family="'DM Serif Display',serif" font-size="38" fill="white">${both}</text>
+    <text x="${mid}" y="${cy+30}" text-anchor="middle" font-family="'DM Mono',monospace" font-size="11" fill="rgba(255,255,255,0.5)">${Math.round(both/N*100)}%</text>
+
+    <!-- Right label -->
+    <text x="${cx2+58}" y="${cy-52}" text-anchor="middle" font-family="'Outfit',sans-serif" font-size="12" font-weight="500" fill="${v.colorB}" opacity="0.9">${v.labelB}</text>
+
+    <!-- Right count -->
+    <text x="${cx2+58}" y="${cy-14}" text-anchor="middle" font-family="'DM Serif Display',serif" font-size="38" fill="${v.colorB}">${onlyB}</text>
+    <text x="${cx2+58}" y="${cy+12}" text-anchor="middle" font-family="'DM Mono',monospace" font-size="11" fill="${v.colorB}" opacity="0.65">${Math.round(onlyB/N*100)}% · só este</text>
+
+    <!-- Neither note -->
+    ${neither > 0 ? `<text x="${W/2}" y="${H-8}" text-anchor="middle" font-family="'DM Mono',monospace" font-size="10" fill="rgba(255,255,255,0.22)">${neither} fora dos dois conjuntos (${Math.round(neither/N*100)}%)</text>` : ''}
+  </svg>`;
+}
+
+const navEl = document.getElementById('nav');
+const panelsEl = document.getElementById('panels');
+
+venns.forEach((v, i) => {
+  // nav button
+  const btn = document.createElement('button');
+  btn.className = 'nav-btn' + (i===0?' on':'');
+  btn.textContent = (i+1).toString().padStart(2,'0') + ' · ' + v.title;
+  btn.onclick = () => show(i);
+  navEl.appendChild(btn);
+
+  // panel
+  const panel = document.createElement('div');
+  panel.className = 'panel' + (i===0?' on':'');
+  panel.id = 'p'+i;
+
+  const isHighlight = v.onlyA===0||v.onlyB===0;
+
+  panel.innerHTML = `
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">${v.title}</div>
+        </div>
+        <div class="card-num">DIAGRAMA ${String(i+1).padStart(2,'0')} / ${venns.length}</div>
+      </div>
+      <div class="venn-area">${buildSVG(v)}</div>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-n">${v.onlyA}</div>
+          <div class="stat-pct">${Math.round(v.onlyA/N*100)}%</div>
+          <div class="stat-l">Só ${v.labelA}</div>
+        </div>
+        <div class="stat highlight">
+          <div class="stat-n">${v.both}</div>
+          <div class="stat-pct">${Math.round(v.both/N*100)}%</div>
+          <div class="stat-l">Interseção (ambos)</div>
+        </div>
+        <div class="stat">
+          <div class="stat-n">${v.onlyB}</div>
+          <div class="stat-pct">${Math.round(v.onlyB/N*100)}%</div>
+          <div class="stat-l">Só ${v.labelB}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-n">${v.neither ?? 0}</div>
+          <div class="stat-pct">${Math.round((v.neither??0)/N*100)}%</div>
+          <div class="stat-l">Fora dos dois</div>
+        </div>
+      </div>
+      <div class="insight">
+        <span class="insight-icon">${isHighlight ? '★ DESTAQUE' : 'ANÁLISE'}</span>
+        <p>${v.note}</p>
+      </div>
+    </div>`;
+  panelsEl.appendChild(panel);
+});
+
+function show(i) {
+  document.querySelectorAll('.panel').forEach((p,j) => p.classList.toggle('on', j===i));
+  document.querySelectorAll('.nav-btn').forEach((b,j) => b.classList.toggle('on', j===i));
+  // re-trigger animation
+  const card = document.querySelector('.panel.on .card');
+  if(card) { card.style.animation='none'; requestAnimationFrame(()=>{ card.style.animation=''; }); }
+}
+</script>
+</body>
+</html>
